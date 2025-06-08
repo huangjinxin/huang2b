@@ -13,12 +13,26 @@
 </head>
 <body>
     <h1>幼儿园管理系统</h1>
+    {% if request.session.get('user_id') %}
+        <p>欢迎，{{ request.session.get('username') }} ({{ request.session.get('role') }}) | <a href="/logout">注销</a></p>
+    {% else %}
+        <p><a href="/login">登录</a></p>
+    {% endif %}
+    {% set role = request.session.get('role') %}
     <ul>
         <li><a href="/docs">接口文档</a></li>
+        {% if role in ['admin', 'teacher'] %}
         <li><a href="/teachers/">教师管理</a></li>
+        {% endif %}
+        {% if role in ['admin', 'student'] %}
         <li><a href="/students/">学生管理</a></li>
+        {% endif %}
+        {% if role in ['admin', 'teacher', 'student'] %}
         <li><a href="/courses/">课程管理</a></li>
+        {% endif %}
+        {% if role == 'admin' %}
         <li><a href="/finances/">财务记录</a></li>
+        {% endif %}
     </ul>
 </body>
 </html>
