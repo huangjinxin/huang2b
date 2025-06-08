@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from . import models, schemas, database
@@ -7,11 +9,12 @@ from . import models, schemas, database
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="幼儿园管理系统")
+templates = Jinja2Templates(directory="app/templates")
 
 # 根路由
-@app.get("/")
-def read_root():
-    return {"message": "欢迎使用幼儿园管理系统"}
+@app.get("/", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # 依赖项：获取数据库会话
 def get_db():

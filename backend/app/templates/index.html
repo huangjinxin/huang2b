@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>幼儿园管理系统</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        section { margin-bottom: 2em; }
+        h2 { margin-top: 1.5em; }
+        label { margin-right: 0.5em; }
+        input[type="text"], input[type="number"], input[type="date"] { margin-right: 0.5em; }
+        ul { padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>幼儿园管理系统</h1>
+
+    <section id="teachers">
+        <h2>教师管理</h2>
+        <form onsubmit="addTeacher(); return false;">
+            <label>姓名 <input type="text" id="teacher-name" required></label>
+            <label>外聘 <input type="checkbox" id="teacher-external"></label>
+            <button type="submit">新增教师</button>
+        </form>
+        <ul id="teacher-list"></ul>
+    </section>
+
+    <section id="students">
+        <h2>学生管理</h2>
+        <form onsubmit="addStudent(); return false;">
+            <label>姓名 <input type="text" id="student-name" required></label>
+            <label>年龄 <input type="number" id="student-age" required></label>
+            <button type="submit">新增学生</button>
+        </form>
+        <ul id="student-list"></ul>
+    </section>
+
+    <section id="courses">
+        <h2>课程管理</h2>
+        <form onsubmit="addCourse(); return false;">
+            <label>标题 <input type="text" id="course-title" required></label>
+            <label>教师ID <input type="number" id="course-teacher" required></label>
+            <button type="submit">新增课程</button>
+        </form>
+        <ul id="course-list"></ul>
+    </section>
+
+    <section id="finances">
+        <h2>财务记录</h2>
+        <form onsubmit="addFinance(); return false;">
+            <label>金额 <input type="number" step="0.01" id="finance-amount" required></label>
+            <label>说明 <input type="text" id="finance-desc"></label>
+            <label>日期 <input type="date" id="finance-date" required></label>
+            <button type="submit">新增记录</button>
+        </form>
+        <ul id="finance-list"></ul>
+    </section>
+
+    <script>
+    async function addTeacher() {
+        const name = document.getElementById('teacher-name').value;
+        const isExternal = document.getElementById('teacher-external').checked;
+        await fetch('/teachers/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, is_external: isExternal })
+        });
+        document.getElementById('teacher-name').value = '';
+        document.getElementById('teacher-external').checked = false;
+        loadTeachers();
+    }
+
+    async function loadTeachers() {
+        const res = await fetch('/teachers/');
+        const data = await res.json();
+        const list = document.getElementById('teacher-list');
+        list.innerHTML = '';
+        data.forEach(t => {
+            const li = document.createElement('li');
+            li.textContent = `${t.id}. ${t.name} ${t.is_external ? '(外聘)' : ''}`;
+            list.appendChild(li);
+        });
+    }
+
+    async function addStudent() {
+        const name = document.getElementById('student-name').value;
+        const age = parseInt(document.getElementById('student-age').value);
+        await fetch('/students/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, age: age })
+        });
+        document.getElementById('student-name').value = '';
+        document.getElementById('student-age').value = '';
+        loadStudents();
+    }
+
+    async function loadStudents() {
+        const res = await fetch('/students/');
+        const data = await res.json();
+        const list = document.getElementById('student-list');
+        list.innerHTML = '';
+        data.forEach(s => {
+            const li = document.createElement('li');
+            li.textContent = `${s.id}. ${s.name} (${s.age}岁)`;
+            list.appendChild(li);
+        });
+    }
+
+    async function addCourse() {
+        const title = document.getElementById('course-title').value;
+        const teacherId = parseInt(document.getElementById('course-teacher').value);
+        await fetch('/courses/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, teacher_id: teacherId })
+        });
+        document.getElementById('course-title').value = '';
+        document.getElementById('course-teacher').value = '';
+        loadCourses();
+    }
+
+    async function loadCourses() {
+        const res = await fetch('/courses/');
+        const data = await res.json();
+        const list = document.getElementById('course-list');
+        list.innerHTML = '';
+        data.forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = `${c.id}. ${c.title} (教师ID: ${c.teacher_id})`;
+            list.appendChild(li);
+        });
+    }
+
+    async function addFinance() {
+        const amount = parseFloat(document.getElementById('finance-amount').value);
+        const desc = document.getElementById('finance-desc').value;
+        const date = document.getElementById('finance-date').value;
+        await fetch('/finances/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: amount, description: desc, date: date })
+        });
+        document.getElementById('finance-amount').value = '';
+        document.getElementById('finance-desc').value = '';
+        document.getElementById('finance-date').value = '';
+        loadFinances();
+    }
+
+    async function loadFinances() {
+        const res = await fetch('/finances/');
+        const data = await res.json();
+        const list = document.getElementById('finance-list');
+        list.innerHTML = '';
+        data.forEach(f => {
+            const li = document.createElement('li');
+            li.textContent = `${f.id}. ${f.amount}元 - ${f.description || ''} (${f.date})`;
+            list.appendChild(li);
+        });
+    }
+
+    function init() {
+        loadTeachers();
+        loadStudents();
+        loadCourses();
+        loadFinances();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
