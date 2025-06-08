@@ -1,0 +1,20 @@
+version: '3'
+services:
+  web:
+    image: python:3.11
+    working_dir: /code
+    volumes:
+      - ./backend:/code
+    command: bash -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: kinder
+      POSTGRES_PASSWORD: kinderpass
+      POSTGRES_DB: kindergarten
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
