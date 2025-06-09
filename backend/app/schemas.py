@@ -8,6 +8,10 @@ class TeacherBase(BaseModel):
 class TeacherCreate(TeacherBase):
     pass
 
+class TeacherUpdate(BaseModel):
+    name: str | None = None
+    is_external: bool | None = None
+
 class Teacher(TeacherBase):
     id: int
 
@@ -21,6 +25,10 @@ class StudentBase(BaseModel):
 class StudentCreate(StudentBase):
     pass
 
+class StudentUpdate(BaseModel):
+    name: str | None = None
+    age: int | None = None
+
 class Student(StudentBase):
     id: int
 
@@ -33,6 +41,10 @@ class CourseBase(BaseModel):
 
 class CourseCreate(CourseBase):
     pass
+
+class CourseUpdate(BaseModel):
+    title: str | None = None
+    teacher_id: int | None = None
 
 class Course(CourseBase):
     id: int
@@ -48,7 +60,25 @@ class FinanceRecordBase(BaseModel):
 class FinanceRecordCreate(FinanceRecordBase):
     pass
 
+class FinanceRecordUpdate(BaseModel):
+    amount: float | None = None
+    description: str | None = None
+    date: date | None = None
+
 class FinanceRecord(FinanceRecordBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+class UserBase(BaseModel):
+    username: str
+    role: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
     id: int
 
     class Config:
