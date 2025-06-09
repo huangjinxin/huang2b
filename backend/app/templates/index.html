@@ -9,6 +9,7 @@
         ul { list-style: none; padding: 0; }
         li { margin-bottom: 10px; }
         a { text-decoration: none; color: #3498db; }
+        nav { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -19,6 +20,7 @@
         <p><a href="/login">登录</a></p>
     {% endif %}
     {% set role = request.session.get('role') %}
+    <nav>
     <ul>
         <li><a href="/docs">接口文档</a></li>
         {% if role in ['admin', 'teacher'] %}
@@ -31,8 +33,10 @@
         <li><a href="/courses/">课程管理</a></li>
         {% endif %}
         {% if role == 'admin' %}
+        <li><a href="/users/">用户管理</a></li>
         <li><a href="/finances/">财务记录</a></li>
         {% endif %}
     </ul>
+    </nav>
 </body>
 </html>

@@ -78,6 +78,11 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    username: str | None = None
+    password: str | None = None
+    role: str | None = None
+
 class User(UserBase):
     id: int
 

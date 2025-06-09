@@ -36,12 +36,16 @@ init_admin()
 # 根路由
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
+    if not request.session.get("user_id"):
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/login", response_class=HTMLResponse)
 def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    if request.session.get("user_id"):
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse("login.html", {"request": request, "error": None})
 
 
 @app.post("/login")
@@ -75,6 +79,11 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     user = db.query(models.User).get(user_id)
     if not user:
         raise HTTPException(status_code=401, detail="用户不存在")
+    return user
+
+def require_admin(user: models.User = Depends(get_current_user)):
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="权限不足")
     return user
 
 # 教师相关接口
@@ -330,5 +339,68 @@ def delete_finance(
     if not db_record:
         raise HTTPException(status_code=404, detail="记录不存在")
     db.delete(db_record)
+    db.commit()
+    return {"ok": True}
+
+# 用户管理接口（仅管理员可用）
+
+@app.post("/users/", response_model=schemas.User)
+def create_user(
+    user_in: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin),
+):
+    if db.query(models.User).filter_by(username=user_in.username).first():
+        raise HTTPException(status_code=400, detail="用户名已存在")
+    db_user = models.User(
+        username=user_in.username,
+        hashed_password=get_password_hash(user_in.password),
+        role=user_in.role,
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@app.get("/users/", response_model=list[schemas.User])
+def list_users(
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin),
+):
+    return db.query(models.User).all()
+
+
+@app.put("/users/{user_id}", response_model=schemas.User)
+def update_user(
+    user_id: int,
+    user_update: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin),
+):
+    db_user = db.query(models.User).get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    if user_update.username is not None:
+        db_user.username = user_update.username
+    if user_update.password is not None:
+        db_user.hashed_password = get_password_hash(user_update.password)
+    if user_update.role is not None:
+        db_user.role = user_update.role
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@app.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin),
+):
+    db_user = db.query(models.User).get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    db.delete(db_user)
     db.commit()
     return {"ok": True}
